@@ -15,21 +15,20 @@ spec = do
 
   describe "parseExpression" $ do
 
-    {-context "variables" $ do-}
-      {-it "parses variables" $ testEq "foo"-}
+    context "variables" $ do
+      it "parses variables" $ testEq "foo"
 
-    {-context "literal" $ do-}
-      {-it "parses Char literals" $ testEq "'c'"-}
-      {-it "parses String literals" $ testEq "\"str\""-}
-      {-it "parses Rational literals" $ testEq "5"-}
+    context "literal" $ do
+      it "parses Char literals" $ testEq "'c'"
+      it "parses String literals" $ testEq "\"str\""
+      it "parses Rational literals" $ testEq "5"
 
-    {-context "application" $ do-}
-      {-it "parses function application" $ testEq "f x"-}
+    context "application" $ do
+      it "parses function application" $ testEq "f x"
 
     context "lambdas" $ do
       it "parses single-arg lambdas" $ testEq "\\ x -> x"
 
-    {-it "accepts type signatures" $ do-}
-      {-let e = "foo :: Int"-}
-      {-parseExpression e `shouldBe` parseExp e-}
-      -- (Right $ SigE (VarE $ mkName "foo") (ConT $ mkName "Int")) `shouldBe` parseExp e
+    context "type signatures" $ do
+      it "accepts variables with type signatures" $ testEq "foo :: Int"
+
