@@ -17,6 +17,7 @@ dependencies:
   - base == 4.*
   - template-haskell
   - haskell-src-meta
+  - parsec
 
 source-dirs: src
 

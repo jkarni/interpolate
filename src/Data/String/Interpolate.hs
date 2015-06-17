@@ -59,8 +59,8 @@ i = QuasiQuoter {
         f (Expression e) = [|(showString . toString) $(reifyExpression e)|]
 
         reifyExpression :: String -> Q Exp
-        reifyExpression s = case parseExpression s of
+        reifyExpression s = case parseExp s of
           Left _ -> do
             reportError "Parse error in expression!"
             [|""|]
-          Right e -> return (toTH e)
+          Right e -> return e

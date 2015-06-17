@@ -9,11 +9,6 @@ import           Control.Applicative ((<$>))
 import           Language.Haskell.Expression.Lexer
 
 parseExpression :: String -> Either String Exp
-parseExpression input = case parse foo "foo.hs" input of
+parseExpression input = case parse (contents expParser) "foo.hs" input of
   Left err -> (Left $ show err)
   Right a -> Right a
-  where
-    foo = VarE . mkName <$> many (satisfy isIdChar)
-
-isIdChar :: Char -> Bool
-isIdChar c = isAlphaNum c || c == '_' || c == '\''
