@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Language.Haskell.Expression.Lexer where
 
 import Data.Char
@@ -9,50 +10,56 @@ import Language.Haskell.TH.Syntax
 
 -- TODO: Rename this file
 
-contents :: Parsec String u Exp -> Parsec String u Exp
+type SParser u v = Parsec String u v
+
+contents :: SParser u Exp -> SParser u Exp
 contents p = do
-  P.whiteSpace haskell
+  whiteSpace
   r <- p
   eof
   return r
 
 -- Remove left recursion
-expParser :: Parsec String u Exp
+expParser :: SParser u Exp
 expParser = try (app <?> "function application")
-        <|> try sig
+        --- <|> try sig  -- left recursive
         <|> try (lit <?> "literal")
+        <|> try (ifte <?> "conditional")
         <|> try (lambdaabs <?> "lambda")
+        <|> try (list <?> "list")
         <|> try (var <?> "variable")
+  -- TODO: A lot...
 
-app :: Parsec String u Exp
+
+app :: SParser u Exp
 app = do
   fn <- var <|> lambdaabs
-  P.whiteSpace haskell
+  whiteSpace
   v  <- var <|> lit
   return $! AppE fn v
 
-lambdaabs :: Parsec String u Exp
+lambdaabs :: SParser u Exp
 lambdaabs = do
   char '\\'
-  P.whiteSpace haskell
+  whiteSpace
   p <- many1 apat
-  P.whiteSpace haskell
+  whiteSpace
   string "->"
-  P.whiteSpace haskell
+  whiteSpace
   e <- expParser
   return $! LamE p e
 
-apat :: Parsec String u Pat
+apat :: SParser u Pat
 apat = varp
   where
-    varp = VarP . mkName <$> P.identifier haskell
+    varp = VarP . mkName <$> identifier
 
 
-var :: Parsec String u Exp
-var = VarE . mkName <$> P.identifier haskell
+var :: SParser u Exp
+var = VarE . mkName <$> identifier
 
 
-lit :: Parsec String u Exp
+lit :: SParser u Exp
 lit = LitE <$> (charLit
             <|> stringLit
             <|> natOrFloatLit)
@@ -66,19 +73,74 @@ lit = LitE <$> (charLit
             Right d -> return $! RationalL (toRational d)
     -- TODO: Prim
 
-sig :: Parsec String u Exp
+
+sig :: SParser u Exp
 sig = do
   e <- (expParser <?> "expression")
-  P.whiteSpace haskell
+  whiteSpace
   string "::"
-  P.whiteSpace haskell
+  whiteSpace
   t <- typ
   return $! SigE e t
 
-typ :: Parsec String u Type
+ifte :: SParser u Exp
+ifte = do
+  reserved "if"
+  cond <- expParser
+  reserved "then"
+  t <- expParser
+  reserved "else"
+  f <- expParser
+  return $! CondE cond t f
+
+list :: SParser u Exp
+list = do
+  char '['
+  optional whiteSpace
+  exps <- sepBy expParser (optional whiteSpace >> char ',')
+  optional whiteSpace
+  char ']'
+  return $! ListE exps
+
+caseE :: SParser u Exp
+caseE = do
+  reserved "case"
+  e <- expParser
+  reserved "of"
+  m <- many match
+  return $! CaseE e m
+
+match :: SParser u Match
+match = do
+  p <- apat
+  b <- body
+  d <- many dec
+  return $! Match p b d
+
+body :: SParser u Body
+body = reserved "=" >> expParser >>= return . NormalB
+  -- TODO: GuardedB case
+
+dec :: SParser u Dec
+dec = undefined
+
+
+typ :: SParser u Type
 typ = conT
   where
     conT = do
       s <- satisfy isUpper
-      r <- many (P.identLetter haskellStyle)
-      return $! (ConT $ mkName $ s : r)
+      r <- many identLetter
+      return $! (ConT $! mkName $! s : r)
+
+whiteSpace :: SParser u ()
+whiteSpace = P.whiteSpace haskell
+
+reserved :: String -> SParser u ()
+reserved = P.reserved haskell
+
+identifier :: SParser u String
+identifier = P.identifier haskell
+
+identLetter :: SParser u Char
+identLetter = P.identLetter haskellStyle
