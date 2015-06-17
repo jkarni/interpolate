@@ -24,7 +24,7 @@ spec = do
     it "accepts character escapes in interpolated expressions" $ do
       [i|foo #{"\955" :: String} bar|] `shouldBe` "foo \955 bar"
 
-    it "dose not strip backslashes (issue #1)" $ do
+    it "does not strip backslashes (issue #1)" $ do
       [i|foo\\bar|] `shouldBe` "foo\\bar"
 
     it "allows to prevent interpolation by escaping the hash with a backslash" $ do

@@ -11,13 +11,12 @@ module Data.String.Interpolate (
 ) where
 
 import           Language.Haskell.TH.Quote (QuasiQuoter(..))
-import           Language.Haskell.Meta.Parse.Careful (parseExp)
 
 import           Data.String.Interpolate.Internal.Util
 import           Data.String.Interpolate.Parse
 import           Data.String.Interpolate.Compat (Q, Exp, appE, reportError)
 
-import           Language.Haskell.Expression
+import           Language.Haskell.Expression (parseExp)
 
 -- |
 -- A `QuasiQuoter` for string interpolation.  Expression enclosed within
@@ -59,8 +58,8 @@ i = QuasiQuoter {
         f (Expression e) = [|(showString . toString) $(reifyExpression e)|]
 
         reifyExpression :: String -> Q Exp
-        reifyExpression s = case parseExpression s of
+        reifyExpression s = case parseExp s of
           Left _ -> do
             reportError "Parse error in expression!"
             [|""|]
-          Right e -> return (toTH e)
+          Right e -> return e
