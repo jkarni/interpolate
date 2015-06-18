@@ -30,6 +30,7 @@ expParser = try (app <?> "function application")
         <|> try (var <?> "variable")
         <|> try (caseE <?> "case")
         <|> try (letE <?> "let")
+        <|> try (parensE <?> "parenthesis")
   -- TODO: A lot...
 
 
@@ -120,6 +121,9 @@ letE = do
   e <- expParser
   return $! LetE d e
 
+parensE :: SParser u Exp
+parensE = ParensE <$> parens expParser
+
 match :: SParser u Match
 match = do
   p <- apat
@@ -154,6 +158,8 @@ typ = conT
       r <- many identLetter
       return $! (ConT $! mkName $! s : r)
 
+-- * Lexer
+
 whiteSpace :: SParser u ()
 whiteSpace = P.whiteSpace haskell
 
@@ -162,6 +168,9 @@ reserved = P.reserved haskell
 
 identifier :: SParser u String
 identifier = P.identifier haskell
+
+parens :: SParser u a -> SParser u a
+parens = P.parens haskell
 
 identLetter :: SParser u Char
 identLetter = P.identLetter haskellStyle

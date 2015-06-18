@@ -48,6 +48,10 @@ spec = do
       it "parses multiple assignments separated by newlines" $
         pendingWith "layout and curly braces"
 
+    context "parens" $ do
+      it "parses them with spaces" $ testEq "( x )"
+      it "parses them without spaces" $ testEq "(x)"
+
     context "type signatures" $ do
       it "accepts variables with type signatures" $ pendingWith "left recursive"
         --testEq "foo :: Int"
