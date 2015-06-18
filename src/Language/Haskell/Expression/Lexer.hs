@@ -28,6 +28,7 @@ expParser = try (app <?> "function application")
         <|> try (lambdaabs <?> "lambda")
         <|> try (list <?> "list")
         <|> try (var <?> "variable")
+        <|> try (caseE <?> "case")
   -- TODO: A lot...
 
 
@@ -113,16 +114,27 @@ caseE = do
 match :: SParser u Match
 match = do
   p <- apat
+  reserved "->"
   b <- body
-  d <- many dec
-  return $! Match p b d
+  -- TODO: where clauses
+  return $! Match p b []
 
 body :: SParser u Body
-body = reserved "=" >> expParser >>= return . NormalB
+body = NormalB <$> expParser
   -- TODO: GuardedB case
+  -- TODO: This TH non-terminal actually seems to correspond to two different
+  -- notions in parsing. Figure out whether we should have one parser for both,
+  -- or split it up.
 
 dec :: SParser u Dec
-dec = undefined
+dec = vald
+  where
+    vald = do
+      p <- apat
+      reserved "="
+      b <- body
+      -- TODO: where clauses
+      return $! ValD p b []
 
 
 typ :: SParser u Type

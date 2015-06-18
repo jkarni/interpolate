@@ -37,6 +37,8 @@ spec = do
       it "parses empty lists" $ testEq "[]"
       it "parses non-empty lists" $ testEq "[1,2]"
 
+    context "case statements" $ do
+      it "parses " $ testEq "case e of y -> 5"
 
     context "type signatures" $ do
       it "accepts variables with type signatures" $ pendingWith "left recursive"
