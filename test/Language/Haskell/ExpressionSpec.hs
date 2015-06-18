@@ -38,7 +38,15 @@ spec = do
       it "parses non-empty lists" $ testEq "[1,2]"
 
     context "case statements" $ do
-      it "parses " $ testEq "case e of y -> 5"
+      it "parses a single pattern" $ testEq "case e of y -> 5"
+      it "parses multiple patterns" $ pendingWith "layout and curly braces"
+
+    context "let bindings" $ do
+      it "parses them" $ testEq "let x = 5 in x"
+      it "parses multiple assignments separated by ';'" $
+        testEq "let x = 5 ; f = id in f x"
+      it "parses multiple assignments separated by newlines" $
+        pendingWith "layout and curly braces"
 
     context "type signatures" $ do
       it "accepts variables with type signatures" $ pendingWith "left recursive"

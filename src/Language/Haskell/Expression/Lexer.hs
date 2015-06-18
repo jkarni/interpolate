@@ -29,6 +29,7 @@ expParser = try (app <?> "function application")
         <|> try (list <?> "list")
         <|> try (var <?> "variable")
         <|> try (caseE <?> "case")
+        <|> try (letE <?> "let")
   -- TODO: A lot...
 
 
@@ -110,6 +111,14 @@ caseE = do
   reserved "of"
   m <- many match
   return $! CaseE e m
+
+letE :: SParser u Exp
+letE = do
+  reserved "let"
+  d <- dec `sepBy` reserved ";"
+  reserved "in"
+  e <- expParser
+  return $! LetE d e
 
 match :: SParser u Match
 match = do
