@@ -36,6 +36,11 @@ spec = do
     context "list" $ do
       it "parses empty lists" $ testEq "[]"
       it "parses non-empty lists" $ testEq "[1,2]"
+      it "parses list ranges" $ do
+        testEq "[ 1 .. ]"
+        --testEq "[ 1..2 ]"
+        --testEq "[1 .. 2]"
+        --testEq "[1, 2..10]"
 
     context "case statements" $ do
       it "parses a single pattern" $ testEq "case e of y -> 5"
@@ -56,3 +61,6 @@ spec = do
       it "accepts variables with type signatures" $ pendingWith "left recursive"
         --testEq "foo :: Int"
 
+    context "do notation" $ do
+      it "accepts single-line do" $ testEq "do return 5"
+      -- it "accepts multiple do statements" $ testEq "do { print 2 ; return 5}"

@@ -23,6 +23,7 @@ contents p = do
 expParser :: SParser u Exp
 expParser = try (app <?> "function application")
         --- <|> try sig  -- left recursive
+        <|> try (arithSeqE <?> "list range")
         <|> try (lit <?> "literal")
         <|> try (ifte <?> "conditional")
         <|> try (lambdaabs <?> "lambda")
@@ -31,6 +32,7 @@ expParser = try (app <?> "function application")
         <|> try (caseE <?> "case")
         <|> try (letE <?> "let")
         <|> try (parensE <?> "parenthesis")
+        <|> try (doE <?> "parenthesis")
   -- TODO: A lot...
 
 
@@ -124,6 +126,29 @@ letE = do
 parensE :: SParser u Exp
 parensE = ParensE <$> parens expParser
 
+doE :: SParser u Exp
+doE = reserved "do" >> DoE <$> many1 stmt
+
+arithSeqE :: SParser u Exp
+arithSeqE = do
+  reserved "["
+  r <- range
+  reserved "]"
+  return $! ArithSeqE r
+
+stmt :: SParser u Stmt
+stmt = try bindS
+   <|> try (NoBindS <$> expParser)
+   <|> letS
+  where
+    letS = reserved "let" >> LetS <$> dec `sepBy1` reserved ";"
+    bindS = do
+      p <- apat
+      reserved "<-"
+      e <- expParser
+      return $! BindS p e
+
+
 match :: SParser u Match
 match = do
   p <- apat
@@ -157,6 +182,15 @@ typ = conT
       s <- satisfy isUpper
       r <- many identLetter
       return $! (ConT $! mkName $! s : r)
+
+range :: SParser u Range
+range = try fromR
+    {-<|> try fromThenR-}
+    {-<|> try fromToR-}
+    {-<|> try fromThenToR-}
+  where
+    -- TODO: accept no whitespace
+    fromR = FromR <$> expParser <* reserved ".."
 
 -- * Lexer
 
