@@ -69,7 +69,7 @@ spec = do
   describe "parseType" $ do
 
     context "types" $ do
-      it "parses single types" $ testEqExp "Int"
+      it "parses single types" $ testEqType "Int"
 
 
 testEqExp :: String -> Expectation
