@@ -12,7 +12,7 @@ import Language.Haskell.TH.Syntax
 
 type SParser u v = Parsec String u v
 
-contents :: SParser u Exp -> SParser u Exp
+contents :: SParser u a -> SParser u a
 contents p = do
   whiteSpace
   r <- p
