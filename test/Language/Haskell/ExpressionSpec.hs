@@ -38,9 +38,9 @@ spec = do
       it "parses non-empty lists" $ testEqExp "[1,2]"
       it "parses list ranges" $ do
         testEqExp "[ 1 .. ]"
-        --testEqExp "[ 1..2 ]"
-        --testEqExp "[1 .. 2]"
-        --testEqExp "[1, 2..10]"
+        testEqExp "[ 1..2 ]"
+        testEqExp "[1 .. 2]"
+        testEqExp "[1, 2..10]"
 
     context "case statements" $ do
       it "parses a single pattern" $ testEqExp "case e of y -> 5"
@@ -70,6 +70,18 @@ spec = do
 
     context "types" $ do
       it "parses single types" $ testEqType "Int"
+      it "parses single type variables" $ testEqType "a"
+      it "parses applied higher-kinded types" $ testEqType "IO Int"
+      it "parses list types" $ do
+        testEqType "[] Int"
+        testEqType "[Int]"
+      it "parses tuples" $ testEqType "(Int, String)"
+      it "parses unit" $ testEqType "()"
+
+  describe "parsePat" $ do
+
+    it "parses variable patterns" $ testEqPat "x"
+    it "parses literal patterns" $ testEqPat "5"
 
 
 testEqExp :: String -> Expectation
@@ -77,3 +89,6 @@ testEqExp e = parseExpression e `shouldBe` M.parseExp e
 
 testEqType :: String -> Expectation
 testEqType e = parseType e `shouldBe` M.parseType e
+
+testEqPat :: String -> Expectation
+testEqPat e = parsePat e `shouldBe` M.parsePat e

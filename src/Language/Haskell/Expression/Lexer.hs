@@ -12,19 +12,13 @@ import Language.Haskell.TH.Syntax
 
 type SParser u v = Parsec String u v
 
-contents :: SParser u a -> SParser u a
-contents p = do
-  whiteSpace
-  r <- p
-  eof
-  return r
 
 -- Remove left recursion
 expParser :: SParser u Exp
 expParser = try (app <?> "function application")
         --- <|> try sig  -- left recursive
         <|> try (arithSeqE <?> "list range")
-        <|> try (lit <?> "literal")
+        <|> try (LitE <$> lit <?> "literal")
         <|> try (ifte <?> "conditional")
         <|> try (lambdaabs <?> "lambda")
         <|> try (list <?> "list")
@@ -40,22 +34,23 @@ app :: SParser u Exp
 app = do
   fn <- var <|> lambdaabs
   whiteSpace
-  v  <- var <|> lit
+  v  <- var <|> (LitE <$> lit)
   return $! AppE fn v
 
 lambdaabs :: SParser u Exp
 lambdaabs = do
   char '\\'
   whiteSpace
-  p <- many1 apat
+  p <- many1 pat
   whiteSpace
   string "->"
   whiteSpace
   e <- expParser
   return $! LamE p e
 
-apat :: SParser u Pat
-apat = varp
+pat :: SParser u Pat
+pat = varp
+  <|> (LitP <$> lit)
   where
     varp = VarP . mkName <$> identifier
 
@@ -64,10 +59,10 @@ var :: SParser u Exp
 var = VarE . mkName <$> identifier
 
 
-lit :: SParser u Exp
-lit = LitE <$> (charLit
-            <|> stringLit
-            <|> natOrFloatLit)
+lit :: SParser u Lit
+lit = charLit
+   <|> stringLit
+   <|> natOrFloatLit
   where
     charLit = CharL <$> P.charLiteral haskell
     stringLit = StringL <$> P.stringLiteral haskell
@@ -143,7 +138,7 @@ stmt = try bindS
   where
     letS = reserved "let" >> LetS <$> dec `sepBy1` reserved ";"
     bindS = do
-      p <- apat
+      p <- pat
       reserved "<-"
       e <- expParser
       return $! BindS p e
@@ -151,7 +146,7 @@ stmt = try bindS
 
 match :: SParser u Match
 match = do
-  p <- apat
+  p <- pat
   reserved "->"
   b <- body
   -- TODO: where clauses
@@ -168,7 +163,7 @@ dec :: SParser u Dec
 dec = vald
   where
     vald = do
-      p <- apat
+      p <- pat
       reserved "="
       b <- body
       -- TODO: where clauses
@@ -177,11 +172,18 @@ dec = vald
 
 typ :: SParser u Type
 typ = conT
+  <|> varT
+  <|> listT
+  -- <|> appT  -- left recursive
   where
     conT = do
       s <- satisfy isUpper
       r <- many identLetter
       return $! (ConT $! mkName $! s : r)
+    varT = VarT . mkName <$> identifier
+    appT = AppT <$> typ <*> typ
+    listT = reserved "[" >> reserved "]" >> return ListT
+
 
 range :: SParser u Range
 range = try fromR
