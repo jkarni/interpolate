@@ -32,7 +32,7 @@ library
       Data.String.Interpolate.Compat
       Data.String.Interpolate.Internal.Util
       Data.String.Interpolate.Parse
-      Language.Haskell.Expression.Lexer
+      Language.Haskell.Expression.Parser
       Language.Haskell.Expression
   build-depends:
       base == 4.*
@@ -53,14 +53,13 @@ test-suite spec
       Data.String.Interpolate.Parse
       Data.String.Interpolate.Util
       Data.String.Interpolate
-      Language.Haskell.Expression.Lexer
+      Language.Haskell.Expression.Parser
       Language.Haskell.Expression
       Data.String.Interpolate.Internal.UtilSpec
       Data.String.Interpolate.IsStringSpec
       Data.String.Interpolate.ParseSpec
       Data.String.Interpolate.UtilSpec
       Data.String.InterpolateSpec
-      Language.Haskell.Expression.LexerSpec
       Language.Haskell.ExpressionSpec
   build-depends:
       base == 4.*

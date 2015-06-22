@@ -1,15 +1,14 @@
-module Language.Haskell.Expression (parseExpression, parseType, parsePat) where
+module Language.Haskell.Expression (parseExp, parseType, parsePat) where
 
 import           Language.Haskell.TH.Syntax
 
-import           Data.Char
 import           Text.Parsec
 import           Control.Applicative ((<$>))
 
-import           Language.Haskell.Expression.Lexer
+import           Language.Haskell.Expression.Parser
 
-parseExpression :: String -> Either String Exp
-parseExpression = wrapParser expParser
+parseExp :: String -> Either String Exp
+parseExp = wrapParser expParser
 
 parseType :: String -> Either String Type
 parseType = wrapParser typ

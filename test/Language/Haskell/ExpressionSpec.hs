@@ -1,13 +1,9 @@
 module Language.Haskell.ExpressionSpec (spec) where
 
 import           Test.Hspec
+import qualified Language.Haskell.Meta.Parse as M
 
 import           Language.Haskell.Expression
-import           Language.Haskell.Expression.Lexer
-
-import qualified Language.Haskell.Meta.Parse as M
-import           Language.Haskell.TH.Syntax
-
 
 
 spec :: Spec
@@ -40,10 +36,10 @@ spec = do
     context "list ranges" $ do
       it "parses simple 'from' ranges" $ do
         testEqExp "[ 1 .. ]"
-        {-testEqExp "[1..]"-}
+        testEqExp "[1 ..]"
       it "parses 'from-then' ranges" $ do
         testEqExp "[ 1, 2 .. ]"
-        {-testEqExp "[1,2..]"-}
+        testEqExp "[1,2 .. ]"
       it "parses 'from-to' ranges" $ do
         testEqExp "[ 1 .. 2 ]"
         {-testEqExp "[1..2]"-}
@@ -67,12 +63,14 @@ spec = do
       it "parses them without spaces" $ testEqExp "(x)"
 
     context "type signatures" $ do
-      it "accepts variables with type signatures" $ pendingWith "left recursive"
-        --testEqExp "foo :: Int"
+      it "accepts variables with type signatures" $ testEqExp "foo :: Int"
 
     context "do notation" $ do
       it "accepts single-line do" $ testEqExp "do return 5"
       -- it "accepts multiple do statements" $ testEqExp "do { print 2 ; return 5}"
+
+    context "infix expressions" $ do
+      it "parses simple infix expressions" $ testEqExp "1 + 2"
 
 
   describe "parseType" $ do
@@ -94,7 +92,7 @@ spec = do
 
 
 testEqExp :: String -> Expectation
-testEqExp e = parseExpression e `shouldBe` M.parseExp e
+testEqExp e = parseExp e `shouldBe` M.parseExp e
 
 testEqType :: String -> Expectation
 testEqType e = parseType e `shouldBe` M.parseType e

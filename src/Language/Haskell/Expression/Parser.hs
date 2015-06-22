@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
-module Language.Haskell.Expression.Lexer where
+module Language.Haskell.Expression.Parser where
 
 import Data.Char
 import Text.Parsec
@@ -8,26 +8,31 @@ import Text.Parsec.Language (haskell, haskellStyle)
 import qualified Text.Parsec.Token as P
 import Language.Haskell.TH.Syntax
 
--- TODO: Rename this file
-
 type SParser u v = Parsec String u v
 
 
--- Remove left recursion
 expParser :: SParser u Exp
-expParser = try (app <?> "function application")
-        --- <|> try sig  -- left recursive
-        <|> try (arithSeqE <?> "list range")
-        <|> try (LitE <$> lit <?> "literal")
-        <|> try (ifte <?> "conditional")
-        <|> try (lambdaabs <?> "lambda")
-        <|> try (list <?> "list")
-        <|> try (var <?> "variable")
-        <|> try (caseE <?> "case")
-        <|> try (letE <?> "let")
-        <|> try (parensE <?> "parenthesis")
-        <|> try (doE <?> "parenthesis")
-  -- TODO: A lot...
+expParser = try sig
+        <|> try infixE
+        <|> try expParserWInfixE
+
+expParserWInfixE :: SParser u Exp
+expParserWInfixE = try infixE
+               <|> try expParserNoLR
+
+expParserNoLR :: SParser u Exp
+expParserNoLR = try (app <?> "function application")
+             --- <|> try sig  -- left recursive
+             <|> try (arithSeqE <?> "list range")
+             <|> try (LitE <$> lit <?> "literal")
+             <|> try (ifte <?> "conditional")
+             <|> try (lambdaabs <?> "lambda")
+             <|> try (list <?> "list")
+             <|> try (var <?> "variable")
+             <|> try (caseE <?> "case")
+             <|> try (letE <?> "let")
+             <|> try (parensE <?> "parenthesis")
+             <|> try (doE <?> "parenthesis")
 
 
 app :: SParser u Exp
@@ -73,13 +78,10 @@ lit = charLit
             Right d -> return $! RationalL (toRational d)
     -- TODO: Prim
 
-
 sig :: SParser u Exp
 sig = do
-  e <- (expParser <?> "expression")
-  whiteSpace
-  string "::"
-  whiteSpace
+  e <- expParserWInfixE
+  reserved "::"
   t <- typ
   return $! SigE e t
 
@@ -101,6 +103,14 @@ list = do
   optional whiteSpace
   char ']'
   return $! ListE exps
+
+-- N.B.: can't handle fixity/multiple exps
+infixE :: SParser u Exp
+infixE = do
+  f <- expParserNoLR
+  op <- VarE . mkName <$> operator
+  s <- expParserNoLR
+  return $! UInfixE f op s
 
 caseE :: SParser u Exp
 caseE = do
@@ -126,9 +136,11 @@ doE = reserved "do" >> DoE <$> many1 stmt
 
 arithSeqE :: SParser u Exp
 arithSeqE = do
-  reserved "["
+  char '['
+  optional whiteSpace
   r <- range
-  reserved "]"
+  optional whiteSpace
+  char ']'
   return $! ArithSeqE r
 
 stmt :: SParser u Stmt
@@ -181,7 +193,7 @@ typ = conT
       r <- many identLetter
       return $! (ConT $! mkName $! s : r)
     varT = VarT . mkName <$> identifier
-    appT = AppT <$> typ <*> typ
+    -- appT = AppT <$> typ <*> typ
     listT = reserved "[" >> reserved "]" >> return ListT
 
 
@@ -200,9 +212,9 @@ range = try fromThenToR
       return $! FromToR f s
     fromThenR = do
       f <- expParser
-      reserved ","
-      s <- expParser
-      reserved ".."
+      mwsToken $ char ','
+      s <- mwsToken expParser
+      string ".."
       return $! FromThenR f s
     fromThenToR = do
       f <- expParser
@@ -228,3 +240,9 @@ parens = P.parens haskell
 
 identLetter :: SParser u Char
 identLetter = P.identLetter haskellStyle
+
+operator :: SParser u String
+operator = P.operator haskell
+
+mwsToken :: SParser u a -> SParser u a
+mwsToken x = optional whiteSpace *> x <* optional whiteSpace
