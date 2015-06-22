@@ -99,7 +99,7 @@ list :: SParser u Exp
 list = do
   char '['
   optional whiteSpace
-  exps <- expParser `sepBy` comma
+  exps <- commaSep expParser
   optional whiteSpace
   char ']'
   return $! ListE exps
@@ -207,20 +207,20 @@ range = try fromThenToR
     fromR = FromR <$> expParser <* reserved ".."
     fromToR = do
       f <- expParser
-      reserved ".."
+      symbol ".."
       s <- expParser
       return $! FromToR f s
     fromThenR = do
       f <- expParser
-      mwsToken $ char ','
+      comma
       s <- mwsToken expParser
-      string ".."
+      symbol ".."
       return $! FromThenR f s
     fromThenToR = do
       f <- expParser
-      reserved ","
+      comma
       s <- expParser
-      reserved ".."
+      symbol ".."
       t <- expParser
       return $! FromThenToR f s t
 
@@ -246,6 +246,12 @@ operator = P.operator haskell
 
 comma :: SParser u String
 comma = P.comma haskell
+
+commaSep :: SParser u a -> SParser u [a]
+commaSep = P.commaSep haskell
+
+symbol :: String -> SParser u String
+symbol = P.symbol haskell
 
 mwsToken :: SParser u a -> SParser u a
 mwsToken x = optional whiteSpace *> x <* optional whiteSpace
