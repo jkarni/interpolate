@@ -23,7 +23,6 @@ expParserWInfixE = try infixE
 
 expParserNoLR :: SParser u Exp
 expParserNoLR = try (app <?> "function application")
-             --- <|> try sig  -- left recursive
              <|> try (arithSeqE <?> "list range")
              <|> try (LitE <$> lit <?> "literal")
              <|> try (ifte <?> "conditional")
@@ -40,7 +39,7 @@ app :: SParser u Exp
 app = do
   fn <- var <|> lambdaabs
   whiteSpace
-  v  <- var <|> (LitE <$> lit)
+  v  <- expParser
   return $! AppE fn v
 
 lambdaabs :: SParser u Exp
@@ -100,7 +99,7 @@ list :: SParser u Exp
 list = do
   char '['
   optional whiteSpace
-  exps <- sepBy expParser (optional whiteSpace >> char ',')
+  exps <- expParser `sepBy` comma
   optional whiteSpace
   char ']'
   return $! ListE exps
@@ -245,5 +244,9 @@ identLetter = P.identLetter haskellStyle
 operator :: SParser u String
 operator = P.operator haskell
 
+comma :: SParser u String
+comma = P.comma haskell
+
 mwsToken :: SParser u a -> SParser u a
 mwsToken x = optional whiteSpace *> x <* optional whiteSpace
+

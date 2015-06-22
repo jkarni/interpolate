@@ -22,6 +22,7 @@ spec = do
 
     context "application" $ do
       it "parses function application" $ testEqExp "f x"
+      it "parses function application over complex expressions" $ testEqExp "f [x,y]"
 
     context "lambdas" $ do
       it "parses single-arg lambdas" $ testEqExp "\\ x -> x"
@@ -32,6 +33,7 @@ spec = do
     context "list" $ do
       it "parses empty lists" $ testEqExp "[]"
       it "parses non-empty lists" $ testEqExp "[1,2]"
+      it "accepts optional whitespace" $ testEqExp "[1, 2]"
 
     context "list ranges" $ do
       it "parses simple 'from' ranges" $ do
@@ -71,7 +73,6 @@ spec = do
 
     context "infix expressions" $ do
       it "parses simple infix expressions" $ testEqExp "1 + 2"
-
 
   describe "parseType" $ do
 
