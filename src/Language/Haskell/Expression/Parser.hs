@@ -2,11 +2,12 @@
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Language.Haskell.Expression.Parser where
 
-import Data.Char
-import Text.Parsec
-import Text.Parsec.Language (haskell, haskellStyle)
-import qualified Text.Parsec.Token as P
-import Language.Haskell.TH.Syntax
+import           Control.Applicative        ((<$>), (<*), (*>))
+import           Data.Char
+import           Language.Haskell.TH.Syntax
+import           Text.Parsec
+import           Text.Parsec.Language       (haskell, haskellStyle)
+import qualified Text.Parsec.Token          as P
 
 type SParser u v = Parsec String u v
 

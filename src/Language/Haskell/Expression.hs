@@ -1,9 +1,7 @@
 module Language.Haskell.Expression (parseExp, parseType, parsePat) where
 
 import           Language.Haskell.TH.Syntax
-
 import           Text.Parsec
-import           Control.Applicative ((<$>))
 
 import           Language.Haskell.Expression.Parser
 
