@@ -186,13 +186,31 @@ typ = conT
 
 
 range :: SParser u Range
-range = try fromR
-    {-<|> try fromThenR-}
-    {-<|> try fromToR-}
-    {-<|> try fromThenToR-}
+range = try fromThenToR
+    <|> try fromToR
+    <|> try fromThenR
+    <|> try fromR
   where
     -- TODO: accept no whitespace
     fromR = FromR <$> expParser <* reserved ".."
+    fromToR = do
+      f <- expParser
+      reserved ".."
+      s <- expParser
+      return $! FromToR f s
+    fromThenR = do
+      f <- expParser
+      reserved ","
+      s <- expParser
+      reserved ".."
+      return $! FromThenR f s
+    fromThenToR = do
+      f <- expParser
+      reserved ","
+      s <- expParser
+      reserved ".."
+      t <- expParser
+      return $! FromThenToR f s t
 
 -- * Lexer
 
