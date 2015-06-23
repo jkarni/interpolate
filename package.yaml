@@ -16,7 +16,7 @@ ghc-options: -Wall
 dependencies:
   - base == 4.*
   - template-haskell
-  - haskell-src-meta
+  - parsec
 
 source-dirs: src
 
@@ -33,6 +33,7 @@ tests:
     dependencies:
       - text
       - bytestring
+      - haskell-src-meta
       - hspec >= 1.5
       - QuickCheck
       - quickcheck-instances

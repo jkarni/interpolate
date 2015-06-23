@@ -11,11 +11,12 @@ module Data.String.Interpolate (
 ) where
 
 import           Language.Haskell.TH.Quote (QuasiQuoter(..))
-import           Language.Haskell.Meta.Parse.Careful (parseExp)
 
 import           Data.String.Interpolate.Internal.Util
 import           Data.String.Interpolate.Parse
 import           Data.String.Interpolate.Compat (Q, Exp, appE, reportError)
+
+import           Language.Haskell.Expression (parseExp)
 
 -- |
 -- A `QuasiQuoter` for string interpolation.  Expression enclosed within
